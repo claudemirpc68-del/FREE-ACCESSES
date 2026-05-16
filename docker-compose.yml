@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/database.json:/app/database.json
+      # Evita que o container baixe os modelos de IA toda vez que for recriado
+      - deepface_models:/root/.deepface
+    restart: always
+
+volumes:
+  deepface_models:

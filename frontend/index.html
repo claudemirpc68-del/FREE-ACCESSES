@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FREE ACCESS | Biometria Facial</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body id="app-body">
+    <div class="glass-background"></div>
+    
+    <header>
+        <div class="logo">
+            <i data-lucide="shield-check"></i>
+            <span>FREE<strong>ACCESS</strong></span>
+        </div>
+        <div class="status-badge">
+            <i data-lucide="circle-dot"></i>
+            <span>Sistema Online</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- Visualização da Câmera -->
+        <section class="camera-section" id="camera-container">
+            <video id="video-preview" autoplay playsinline muted></video>
+            <div class="scan-overlay">
+                <div class="scan-line"></div>
+                <div class="face-rect" id="face-rect"></div>
+            </div>
+        </section>
+
+        <!-- Painel de Controle -->
+        <aside class="control-panel">
+            <!-- Catraca Virtual Integrada -->
+            <div class="card gate-card" id="gate-container">
+                <h3><i data-lucide="door-closed"></i> Painel de Acesso</h3>
+                <div class="gate-status-container">
+                    <div class="gate-visual" id="gate-visual">
+                        <div class="gate-arm" id="gate-arm"></div>
+                        <i data-lucide="lock" id="gate-icon"></i>
+                    </div>
+                    <div class="gate-label" id="gate-label">BLOQUEADA</div>
+                    
+                    <!-- Mensagem de Boas-vindas Integrada -->
+                    <div id="gate-message" style="margin-top: 1rem; text-align: center; display: none;">
+                        <div id="user-gender-icon" style="font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 1s infinite alternate;">🎩</div>
+                        <div id="user-welcome-name" style="font-weight: 700; font-size: 1.1rem; color: var(--success);">Olá!</div>
+                        <div id="user-welcome-ticket" style="font-size: 0.8rem; color: var(--text-dim);">Ticket</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i data-lucide="settings"></i> Operação</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="input-group">
+                        <label for="user-name" style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.3rem; display: block;">Primeiro Nome</label>
+                        <input type="text" id="user-name-input" placeholder="Ex: Claudemir" 
+                               style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; outline: none;">
+                    </div>
+
+                    <!-- Novo: Seletor de Sexo -->
+                    <div class="input-group">
+                        <label style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.3rem; display: block;">Sexo</label>
+                        <select id="user-gender-select" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white; outline: none;">
+                            <option value="auto" style="background: #222;">Detectar Automaticamente (IA)</option>
+                            <option value="Man" style="background: #222;">Masculino 🎩</option>
+                            <option value="Woman" style="background: #222;">Feminino 👗</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-recognize">
+                        <i data-lucide="scan-face"></i>
+                        Iniciar Reconhecimento
+                    </button>
+
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                        <span style="font-size: 0.8rem; color: var(--text-dim);">Reconhecimento Automático</span>
+                        <label class="switch">
+                            <input type="checkbox" id="auto-scan-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <button class="btn btn-secondary" id="btn-register">
+                        <i data-lucide="user-plus"></i>
+                        Cadastrar Novo Usuário
+                    </button>
+                </div>
+            </div>
+
+            <!-- Novo: Histórico -->
+            <div class="card history-card">
+                <h3><i data-lucide="history"></i> Últimos Acessos</h3>
+                <div id="access-history" class="history-list">
+                    <!-- Itens do histórico aparecerão aqui -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i data-lucide="activity"></i> Logs</h3>
+                <div id="log-container" style="font-size: 0.75rem; color: var(--text-dim); max-height: 80px; overflow-y: auto; font-family: monospace;">
+                    <div>[INFO] Sistema pronto.</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Antigravity - Tecnologias de Acesso Biométrico</p>
+    </footer>
+
+    <canvas id="capture-canvas" style="display: none;"></canvas>
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

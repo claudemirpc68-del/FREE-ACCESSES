@@ -1,0 +1,20 @@
+# Ambientes Virtuais
+backend/venv/
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Dados e Imagens (Privacidade)
+backend/database.json
+backend/captures/
+*.png
+*.jpg
+*.jpeg
+scratch/
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store

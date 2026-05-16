@@ -132,13 +132,37 @@ async function captureFrame() {
     return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
 }
 
-async function handleAction(endpoint, successMsg) {
+const btnNativeCamera = document.getElementById('btn-native-camera');
+const nativeFileInput = document.getElementById('native-file-input');
+
+// Acionar câmera nativa ao clicar no botão
+if (btnNativeCamera && nativeFileInput) {
+    btnNativeCamera.addEventListener('click', () => nativeFileInput.click());
+    
+    nativeFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            addLog('[INFO] Foto capturada da câmera nativa.');
+            handleAction('/register', 'Usuário Registrado', e.target.files[0]);
+        }
+    });
+}
+
+btnRecognize.addEventListener('click', () => handleAction('/recognize', 'Acesso Liberado'));
+btnRegister.addEventListener('click', () => handleAction('/register', 'Usuário Registrado'));
+
+async function handleAction(endpoint, successMsg, externalFile = null) {
     if (isProcessing) return;
     isProcessing = true;
     
     setUIState('scanning');
     
-    const blob = await captureFrame();
+    let blob;
+    if (externalFile) {
+        blob = externalFile;
+    } else {
+        blob = await captureFrame();
+    }
+
     const formData = new FormData();
     formData.append('file', blob, 'capture.jpg');
     
@@ -208,8 +232,6 @@ function addToHistory(name, ticket) {
     if (window.lucide) lucide.createIcons();
 }
 
-btnRecognize.addEventListener('click', () => handleAction('/recognize', 'Acesso Liberado'));
-btnRegister.addEventListener('click', () => handleAction('/register', 'Usuário Registrado'));
 
 setInterval(() => {
     if (autoScanToggle.checked && !isProcessing) {

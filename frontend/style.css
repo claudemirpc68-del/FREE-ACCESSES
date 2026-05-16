@@ -316,6 +316,36 @@ header {
     color: var(--text-dim);
 }
 
+.registration-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.separator::before,
+.separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.separator:not(:empty)::before {
+    margin-right: .5em;
+}
+
+.separator:not(:empty)::after {
+    margin-left: .5em;
+}
+
 /* Botões e Inputs */
 .btn {
     width: 100%;

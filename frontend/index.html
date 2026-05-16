@@ -110,10 +110,22 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-success btn-lg" id="btn-register">
-                        <i data-lucide="user-plus"></i>
-                        FINALIZAR CADASTRO
-                    </button>
+                    <div class="registration-actions">
+                        <!-- Opção 1: Usar vídeo atual -->
+                        <button class="btn btn-success" id="btn-register">
+                            <i data-lucide="video"></i>
+                            USAR VÍDEO ATUAL
+                        </button>
+                        
+                        <div class="separator"><span>OU</span></div>
+
+                        <!-- Opção 2: Câmera Nativa/Arquivo -->
+                        <button class="btn btn-secondary" id="btn-native-camera">
+                            <i data-lucide="camera"></i>
+                            TIRAR FOTO (NATIVA)
+                        </button>
+                        <input type="file" id="native-file-input" accept="image/*" capture="camera" style="display: none;">
+                    </div>
                 </div>
                 
                 <div class="card logs-card">

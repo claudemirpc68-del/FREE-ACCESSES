@@ -25,8 +25,19 @@ const accessHistory = document.getElementById('access-history');
 const autoScanToggle = document.getElementById('auto-scan-toggle');
 const appBody = document.getElementById('app-body');
 const statusIconMain = document.getElementById('status-icon-main');
+const btnSwitchCamera = document.getElementById('btn-switch-camera');
 
 let isProcessing = false;
+let currentFacingMode = "user"; // "user" para frontal, "environment" para traseira
+
+// Lógica de Alternar Câmera
+if (btnSwitchCamera) {
+    btnSwitchCamera.addEventListener('click', () => {
+        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+        addLog(`[UI] Trocando para câmera: ${currentFacingMode}`);
+        initCamera();
+    });
+}
 
 // Lógica de Troca de Abas
 const navItems = document.querySelectorAll('.nav-item');
@@ -53,15 +64,20 @@ navItems.forEach(item => {
 // Inicializar Câmera
 async function initCamera() {
     try {
+        // Parar tracks antigos se existirem para liberar a câmera antes de trocar
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
                 width: { ideal: 1280 },
                 height: { ideal: 720 },
-                facingMode: "user"
+                facingMode: currentFacingMode
             } 
         });
         video.srcObject = stream;
-        addLog('[INFO] Câmera pronta.');
+        addLog(`[INFO] Câmera (${currentFacingMode}) pronta.`);
     } catch (err) {
         addLog('[ERRO] Câmera: ' + err.message);
     }

@@ -177,6 +177,35 @@ header {
     transition: all 0.4s ease;
 }
 
+.btn-icon-floating {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s ease;
+}
+
+.btn-icon-floating:active {
+    transform: scale(0.9);
+    background: var(--primary);
+}
+
+.btn-icon-floating i {
+    width: 20px;
+    height: 20px;
+}
+
 /* Painel de Controle e Abas */
 .control-panel {
     display: flex;

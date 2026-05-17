@@ -13,7 +13,7 @@ const API_URL = getApiUrl();
 const video = document.getElementById('video-preview');
 const canvas = document.getElementById('capture-canvas');
 const btnRecognize = document.getElementById('btn-recognize');
-const btnRegister = document.getElementById('btn-register');
+// Botão "usar vídeo" removido, utilizando nativo.
 const resultStatus = document.getElementById('gate-label');
 const resultMsg = document.getElementById('gate-message');
 const welcomeName = document.getElementById('user-welcome-name');
@@ -133,22 +133,94 @@ async function captureFrame() {
 }
 
 const btnNativeCamera = document.getElementById('btn-native-camera');
-const nativeFileInput = document.getElementById('native-file-input');
+const qrModal = document.getElementById('qr-modal');
+const btnCancelQr = document.getElementById('btn-cancel-qr');
+const qrContainer = document.getElementById('qrcode-container');
+const qrStatusText = document.getElementById('qr-status-text');
 
-// Acionar câmera nativa ao clicar no botão
-if (btnNativeCamera && nativeFileInput) {
-    btnNativeCamera.addEventListener('click', () => nativeFileInput.click());
-    
-    nativeFileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-            addLog('[INFO] Foto capturada da câmera nativa.');
-            handleAction('/register', 'Usuário Registrado', e.target.files[0]);
+let handoffPollInterval = null;
+let currentHandoffToken = null;
+
+if (btnNativeCamera) {
+    btnNativeCamera.addEventListener('click', async () => {
+        const nameInput = document.getElementById('user-name-input').value.trim() || 'Visitante';
+        const gender = document.getElementById('user-gender-select').value;
+        
+        try {
+            // Pegar IP real da rede do backend
+            const configRes = await fetch(`${API_URL}/handoff/config`);
+            const configData = await configRes.json();
+            const networkIP = configData.ip;
+            const networkApiUrl = `http://${networkIP}:${configData.port}`;
+
+            const res = await fetch(`${API_URL}/handoff/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: nameInput, gender })
+            });
+            const data = await res.json();
+            currentHandoffToken = data.token;
+            
+            qrContainer.innerHTML = '';
+            
+            const mobileUrl = `http://${networkIP}:${configData.port}/ui/mobile_capture.html?token=${currentHandoffToken}&api=${encodeURIComponent(networkApiUrl)}`;
+            
+            new QRCode(qrContainer, {
+                text: mobileUrl,
+                width: 220,
+                height: 220,
+                colorDark: "#09090b",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            qrStatusText.innerText = "Aguardando envio da foto...";
+            qrModal.style.display = 'flex';
+            
+            if (handoffPollInterval) clearInterval(handoffPollInterval);
+            handoffPollInterval = setInterval(checkHandoffStatus, 2000);
+            
+        } catch(e) {
+            addLog("[ERRO] Falha ao iniciar cadastro pelo celular: " + e.message);
         }
     });
 }
 
+if (btnCancelQr) {
+    btnCancelQr.addEventListener('click', () => {
+        qrModal.style.display = 'none';
+        if (handoffPollInterval) clearInterval(handoffPollInterval);
+    });
+}
+
+async function checkHandoffStatus() {
+    if (!currentHandoffToken) return;
+    try {
+        const res = await fetch(`${API_URL}/handoff/status/${currentHandoffToken}`);
+        if(res.ok) {
+            const data = await res.json();
+            if (data.status === "COMPLETED") {
+                clearInterval(handoffPollInterval);
+                qrModal.style.display = 'none';
+                
+                const user = data.result;
+                setUIState('success', 'SUCESSO!', `${user.name} cadastrado`, 'unlock', user.gender);
+                document.getElementById('user-name-input').value = '';
+                addLog(`[INFO] Cadastro Handoff finalizado: ${user.name}`);
+                setTimeout(() => setUIState(null), 4000);
+            } else if (data.status === "ERROR") {
+                clearInterval(handoffPollInterval);
+                qrModal.style.display = 'none';
+                setUIState('error', 'Erro Cadastro', data.result.detail || 'Falha no processamento');
+                setTimeout(() => setUIState(null), 4000);
+            }
+        }
+    } catch(e) {
+        console.error("Erro no polling: ", e);
+    }
+}
 btnRecognize.addEventListener('click', () => handleAction('/recognize', 'Acesso Liberado'));
-btnRegister.addEventListener('click', () => handleAction('/register', 'Usuário Registrado'));
+// Listener de registro movido para o botão nativo apenas
 
 async function handleAction(endpoint, successMsg, externalFile = null) {
     if (isProcessing) return;

@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-</head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <body id="app-body">
     <div class="glass-background"></div>
     
@@ -111,18 +111,10 @@
                     </div>
 
                     <div class="registration-actions">
-                        <!-- Opção 1: Usar vídeo atual -->
-                        <button class="btn btn-success" id="btn-register">
-                            <i data-lucide="video"></i>
-                            USAR VÍDEO ATUAL
-                        </button>
-                        
-                        <div class="separator"><span>OU</span></div>
-
-                        <!-- Opção 2: Câmera Nativa/Arquivo -->
-                        <button class="btn btn-secondary" id="btn-native-camera">
+                        <!-- Botão de Cadastro (Nativa/Arquivo) -->
+                        <button class="btn btn-primary" id="btn-native-camera">
                             <i data-lucide="camera"></i>
-                            TIRAR FOTO (NATIVA)
+                            TIRAR FOTO PARA CADASTRO
                         </button>
                         <input type="file" id="native-file-input" accept="image/*" capture="camera" style="display: none;">
                     </div>
@@ -155,6 +147,18 @@
     </footer>
 
     <canvas id="capture-canvas" style="display: none;"></canvas>
+
+    <!-- Modal do QR Code -->
+    <div id="qr-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content card">
+            <h3><i data-lucide="smartphone"></i> Cadastro pelo Celular</h3>
+            <p class="instruction-text">Aponte a câmera do seu celular para o QR Code abaixo para tirar a foto de cadastro.</p>
+            <div id="qrcode-container" class="qr-box"></div>
+            <p id="qr-status-text" class="qr-status-text">Aguardando envio da foto...</p>
+            <button id="btn-cancel-qr" class="btn btn-secondary" style="margin-top: 1rem;">Cancelar</button>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
         lucide.createIcons();

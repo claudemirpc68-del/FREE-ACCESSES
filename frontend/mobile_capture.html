@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captura de Cadastro - FREE ACCESS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #09090b;
+            color: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .mobile-card {
+            background: rgba(24, 24, 27, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .header-icon {
+            color: #a855f7;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto;
+        }
+        .btn-capture {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 10px 20px -5px rgba(168, 85, 247, 0.4);
+        }
+        .status-message {
+            font-size: 1rem;
+            color: #a1a1aa;
+        }
+        .success-text {
+            color: #22c55e;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: none;
+        }
+        .loader {
+            display: none;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #a855f7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="glass-background"></div>
+    <div class="mobile-card">
+        <i data-lucide="camera" class="header-icon" id="main-icon"></i>
+        <h2>Cadastro Facial</h2>
+        
+        <p class="status-message" id="instruction-text">
+            Siga as instruções do computador. Tire uma foto do seu rosto com boa iluminação.
+        </p>
+        
+        <div class="loader" id="loading-spinner"></div>
+        <p class="success-text" id="success-msg">Cadastro Concluído! Pode olhar para a tela do PC.</p>
+        <p class="success-text" id="error-msg" style="color: #ef4444;"></p>
+
+        <label class="btn-capture" id="btn-open-cam" for="camera-input">
+            <i data-lucide="scan-face"></i> ABRIR CÂMERA
+        </label>
+        <input type="file" id="camera-input" accept="image/*" capture="user" style="display: none;">
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const api = urlParams.get('api');
+        
+        const btnOpenCam = document.getElementById('btn-open-cam');
+        const cameraInput = document.getElementById('camera-input');
+        const loader = document.getElementById('loading-spinner');
+        const instructionText = document.getElementById('instruction-text');
+        const successMsg = document.getElementById('success-msg');
+        const errorMsg = document.getElementById('error-msg');
+        const mainIcon = document.getElementById('main-icon');
+
+        if (!token || !api) {
+            instructionText.innerText = "Link inválido. Escaneie o QR Code novamente.";
+            btnOpenCam.style.display = "none";
+        } else {
+            cameraInput.addEventListener('change', async (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    
+                    // UI estado enviando
+                    btnOpenCam.style.display = 'none';
+                    instructionText.innerText = "Processando imagem...";
+                    loader.style.display = 'block';
+                    errorMsg.style.display = 'none';
+
+                    const img = new Image();
+                    img.src = URL.createObjectURL(file);
+                    
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_WIDTH = 800;
+
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob(async (blob) => {
+                            const formData = new FormData();
+                            formData.append('file', blob, 'mobile_capture.jpg');
+
+                            try {
+                                const response = await fetch(`${api}/handoff/upload/${token}`, {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                
+                                const result = await response.json();
+                                
+                                loader.style.display = 'none';
+                                if (response.ok) {
+                                    instructionText.style.display = 'none';
+                                    successMsg.style.display = 'block';
+                                    mainIcon.setAttribute('data-lucide', 'check-circle');
+                                    mainIcon.style.color = '#22c55e';
+                                    lucide.createIcons();
+                                } else {
+                                    instructionText.innerText = "Erro ao enviar.";
+                                    errorMsg.innerText = result.detail || "Não foi possível reconhecer um rosto válido.";
+                                    errorMsg.style.display = 'block';
+                                    btnOpenCam.style.display = 'flex';
+                                    btnOpenCam.innerHTML = '<i data-lucide="refresh-ccw"></i> TENTAR NOVAMENTE';
+                                    lucide.createIcons();
+                                }
+                            } catch (err) {
+                                loader.style.display = 'none';
+                                instructionText.innerText = "Erro de conexão com o servidor.";
+                                btnOpenCam.style.display = 'flex';
+                            }
+                        }, 'image/jpeg', 0.8);
+                    };
+                }
+            });
+        }
+    </script>
+</body>
+</html>

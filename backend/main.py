@@ -208,6 +208,101 @@ async def recognize_face(file: UploadFile = File(...)):
     except Exception as e:
         print(f"DEBUG: ERRO no reconhecimento: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+# --- MÓDULO: QR CODE HANDOFF ---
+
+import socket
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+@app.get("/handoff/config")
+async def handoff_config():
+    return {"ip": get_local_ip(), "port": 8000}
+
+HANDOFF_SESSIONS = {}
+
+class HandoffStartReq(BaseModel):
+    name: str
+    gender: str
+
+@app.post("/handoff/start")
+async def handoff_start(req: HandoffStartReq):
+    token = str(uuid.uuid4())
+    HANDOFF_SESSIONS[token] = {
+        "status": "PENDING",
+        "name": req.name,
+        "gender": req.gender,
+        "result": None
+    }
+    return {"token": token}
+
+@app.get("/handoff/status/{token}")
+async def handoff_status(token: str):
+    if token not in HANDOFF_SESSIONS:
+        raise HTTPException(status_code=404, detail="Sessão não encontrada")
+    return {"status": HANDOFF_SESSIONS[token]["status"], "result": HANDOFF_SESSIONS[token]["result"]}
+
+@app.post("/handoff/upload/{token}")
+async def handoff_upload(token: str, file: UploadFile = File(...)):
+    if token not in HANDOFF_SESSIONS:
+        raise HTTPException(status_code=404, detail="Sessão não encontrada")
+    
+    session = HANDOFF_SESSIONS[token]
+    if session["status"] == "COMPLETED":
+        return {"message": "Sessão já completada"}
+
+    try:
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        result = DeepFace.represent(img_path=img, model_name="Facenet", detector_backend='opencv', enforce_detection=True)
+        if not result or len(result) == 0:
+            raise HTTPException(status_code=400, detail="Não foi possível isolar um rosto.")
+            
+        embedding = result[0]["embedding"]
+        user_id = str(uuid.uuid4())
+        
+        user_gender = session["gender"]
+        if user_gender == "auto":
+            try:
+                analysis = DeepFace.analyze(img_path=img, actions=['gender'], detector_backend='opencv', enforce_detection=False)
+                user_gender = analysis[0]["dominant_gender"]
+            except:
+                user_gender = "Unknown"
+
+        db = load_db()
+        ticket_type = "VIP ✨"
+        db["users"].append({
+            "id": user_id,
+            "name": session["name"],
+            "ticket": ticket_type,
+            "gender": user_gender,
+            "embedding": embedding
+        })
+        save_db(db)
+
+        session["status"] = "COMPLETED"
+        session["result"] = {"user_id": user_id, "name": session["name"], "ticket": ticket_type, "gender": user_gender}
+
+        return {"message": "Upload concluído e usuário registrado!"}
+
+    except HTTPException as he:
+        session["status"] = "ERROR"
+        session["result"] = {"detail": str(he.detail)}
+        raise he
+    except Exception as e:
+        session["status"] = "ERROR"
+        session["result"] = {"detail": str(e)}
+        print(f"DEBUG: ERRO no Handoff: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno ao analisar a foto")
 
 if __name__ == "__main__":
     import uvicorn

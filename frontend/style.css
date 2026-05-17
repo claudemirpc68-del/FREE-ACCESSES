@@ -527,22 +527,70 @@ input:focus {
 input:checked + .slider { background-color: var(--primary); }
 input:checked + .slider:before { transform: translateX(20px); }
 
+/* --- MODAL DO QR CODE --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9);
+}
+
+.qr-box {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.qr-status-text {
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 600;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
 /* --- DISPOSITIVOS GRANDES (PC / DASHBOARD) --- */
 @media (min-width: 1024px) {
     .app-container {
         display: grid;
-        grid-template-columns: 1fr 400px;
+        grid-template-columns: 1fr 380px;
         gap: 30px;
         padding: 30px;
         align-items: start;
-        max-width: 1400px;
+        max-width: 1100px;
         margin: 0 auto;
     }
 
     .camera-section {
         position: sticky;
         top: 30px;
-        height: 650px; /* Altura fixa confortável para o PC */
+        height: 480px; /* Altura reduzida para melhor visualização no PC */
+        border-radius: 20px;
     }
 
     .sidebar {
